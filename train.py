@@ -1,29 +1,30 @@
-from sklearn.ensemble import RandomForestClassifier
+import os
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import plot_confusion_matrix
 import matplotlib.pyplot as plt
-import json
-import os
-import numpy as np
 
 # Read in data
-X_train = np.genfromtxt("data/train_features.csv")
-y_train = np.genfromtxt("data/train_labels.csv")
-X_test = np.genfromtxt("data/test_features.csv")
-y_test = np.genfromtxt("data/test_labels.csv")
+df_train = pd.read_csv('data/titanic_train.csv', header=None)
+df_validation = pd.read_csv('data/titanic_validation.csv', header=None)
 
+# Create features and labels
+X_train = df_train.loc[:, 1:]
+y_train = df_train.loc[:, 0]
+X_val = df_validation.loc[:, 1:]
+y_val = df_validation.loc[:, 0]
 
-# Fit a model
-depth = 2
-clf = RandomForestClassifier(max_depth=depth)
-clf.fit(X_train,y_train)
+# Fit the model
+clf = LogisticRegression(random_state=0, max_iter=1000)
+clf.fit(X_train, y_train)
 
-acc = clf.score(X_test, y_test)
+# Accuracy
+acc = clf.score(X_val, y_val)
 print(acc)
 with open("metrics.txt", 'w') as outfile:
         outfile.write("Accuracy: " + str(acc) + "\n")
 
 
 # Plot it
-disp = plot_confusion_matrix(clf, X_test, y_test, normalize='true',cmap=plt.cm.Blues)
+disp = plot_confusion_matrix(clf, X_val, y_val, normalize='true',cmap=plt.cm.Blues)
 plt.savefig('confusion_matrix.png')
-

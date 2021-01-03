@@ -1,16 +1,64 @@
 name: model-training
 on: [push]
 jobs:
-  run:
+  deploy-cloud-runner:
     runs-on: [ubuntu-latest]
-    container: docker://dvcorg/cml-py3:latest
+    container: docker://dvcorg/cml:latest
+    steps:
+      - name: deploy
+        env:
+          repo_token: ${{ secrets.REPO_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          echo "Deploying..."
+
+          MACHINE="cml$(date +%s)"
+          docker-machine create \
+              --driver amazonec2 \
+              --amazonec2-instance-type t2.micro \
+              --amazonec2-region eu-central-1 \
+              --amazonec2-zone a \
+              --amazonec2-vpc-id vpc-ed156884 \
+              --amazonec2-ssh-user ubuntu \
+              $MACHINE
+
+          eval "$(docker-machine env --shell sh $MACHINE)"
+
+          (
+          docker-machine ssh $MACHINE "sudo mkdir -p /docker_machine && sudo chmod 777 /docker_machine" && \
+          docker-machine scp -r -q ~/.docker/machine/ $MACHINE:/docker_machine && \
+
+          docker run --name runner -d \
+            -v /docker_machine/machine:/root/.docker/machine \
+            -e RUNNER_IDLE_TIMEOUT=120 \
+            -e DOCKER_MACHINE=${MACHINE} \
+            -e RUNNER_LABELS=cml \
+            -e repo_token=$repo_token \
+            -e RUNNER_REPO="https://github.com/${GITHUB_REPOSITORY}" \
+           dvcorg/cml-py3 && \
+
+          sleep 20 && echo "Deployed $MACHINE"
+          ) || (echo y | docker-machine rm $MACHINE && exit 1)
+  train:
+    needs: deploy-cloud-runner
+    runs-on: [self-hosted, cml]
+
     steps:
       - uses: actions/checkout@v2
       - name: cml_run
+        shell: bash
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           pip install -r requirements.txt
+
+          # Pull data & run-cache from S3
+          dvc pull
+
+          # Execute training script
           python train.py
 
           cat metrics.txt >> report.md

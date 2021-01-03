@@ -15,7 +15,7 @@ X_val = df_validation.loc[:, 1:]
 y_val = df_validation.loc[:, 0]
 
 # Fit the model
-clf = LogisticRegression(random_state=1, max_iter=1000)
+clf = LogisticRegression(random_state=2, max_iter=1000)
 clf.fit(X_train, y_train)
 
 # Accuracy

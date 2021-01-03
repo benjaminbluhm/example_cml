@@ -47,13 +47,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: cml_run
+        shell: bash
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           pip install -r requirements.txt
 
+          # Pull data & run-cache from S3
           dvc pull
 
+          # Execute training script
           python train.py
 
           cat metrics.txt >> report.md

@@ -47,7 +47,7 @@ jobs:
           ) || (docker-machine rm -f $MACHINE && exit 1)
   train:
     needs: deploy-cloud-runner
-    runs-on: [self-hosted, cml]
+    runs-on: [self-hosted, gce]
 
     steps:
       - uses: actions/checkout@v2

@@ -1,6 +1,2 @@
-[core]
-    remote = gcpstorage
 ['remote "storage"']
     url = s3://fintech2021/dvc-storage
-['remote "gcpstorage"']
-    url = gs://fintech2021/dvc-storage

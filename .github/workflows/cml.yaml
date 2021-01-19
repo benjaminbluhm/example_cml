@@ -55,7 +55,8 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-          # Pull data & run-cache from S3
+          # Pull data & run-c
+          ache from S3
           dvc pull
 
           # Execute training script

@@ -6,48 +6,43 @@ jobs:
     container: docker://dvcorg/cml:latest
     steps:
       - name: deploy
-        shell: bash
         env:
           repo_token: ${{ secrets.REPO_TOKEN }}
-          GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           echo "Deploying..."
 
-          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}' > gce-credentials.json
-          export GOOGLE_APPLICATION_CREDENTIALS='gce-credentials.json'
-
-          RUNNER_LABELS="gce"
-          RUNNER_REPO="https://github.com/${GITHUB_REPOSITORY}"
           MACHINE="cml$(date +%s)"
-
-          docker-machine create --driver google \
-            --google-machine-type "n1-standard-4" \
-            --google-project "turing-citizen-299412" \
-            $MACHINE
+          docker-machine create \
+              --driver amazonec2 \
+              --amazonec2-instance-type t2.micro \
+              --amazonec2-region eu-central-1 \
+              --amazonec2-zone a \
+              --amazonec2-vpc-id vpc-ed156884 \
+              --amazonec2-ssh-user ubuntu \
+              $MACHINE
 
           eval "$(docker-machine env --shell sh $MACHINE)"
 
           (
           docker-machine ssh $MACHINE "sudo mkdir -p /docker_machine && sudo chmod 777 /docker_machine" && \
           docker-machine scp -r -q ~/.docker/machine/ $MACHINE:/docker_machine && \
-          docker-machine scp -q gce-credentials.json $MACHINE:/docker_machine/gce-credentials.json && \
 
-          eval "$(docker-machine env --shell sh $MACHINE)" && \
           docker run --name runner -d \
-            -v /docker_machine/gce-credentials.json:/gce-credentials.json \
-            -e GOOGLE_APPLICATION_CREDENTIALS='/gce-credentials.json' \
             -v /docker_machine/machine:/root/.docker/machine \
-            -e DOCKER_MACHINE=$MACHINE \
-            -e repo_token=$repo_token \
-            -e RUNNER_LABELS=$RUNNER_LABELS \
-            -e RUNNER_REPO=$RUNNER_REPO \
             -e RUNNER_IDLE_TIMEOUT=120 \
-            dvcorg/cml-py3 && \
+            -e DOCKER_MACHINE=${MACHINE} \
+            -e RUNNER_LABELS=cml \
+            -e repo_token=$repo_token \
+            -e RUNNER_REPO="https://github.com/${GITHUB_REPOSITORY}" \
+           dvcorg/cml-py3 && \
+
           sleep 20 && echo "Deployed $MACHINE"
-          ) || (docker-machine rm -f $MACHINE && exit 1)
+          ) || (echo y | docker-machine rm $MACHINE && exit 1)
   train:
     needs: deploy-cloud-runner
-    runs-on: [self-hosted, gce]
+    runs-on: [self-hosted, cml]
 
     steps:
       - uses: actions/checkout@v2
@@ -55,16 +50,18 @@ jobs:
         shell: bash
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          GOOGLE_APPLICATION_CREDENTIALS_DATA: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_DATA }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           pip install -r requirements.txt
 
-          # Pull data & run-cache from GCP storage
+          # Pull data & run-cache from S3
           dvc pull
 
           # Execute training script
           python train.py
 
-          cat metrics.txt >> report.md
-          cml-publish confusion_matrix.png --md >> report.md
-          cml-send-comment report.md
+          # Push trained model to remote storage
+          dvc add data/trained_model.joblib
+          git commit data/trained_model.joblib.dvc -m "Model updates"
+          dvc push

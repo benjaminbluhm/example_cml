@@ -1,8 +1,6 @@
-import os
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import plot_confusion_matrix
-import matplotlib.pyplot as plt
+from joblib import dump
 
 # Read in data
 df_train = pd.read_csv('data/titanic_train.csv', header=None)
@@ -18,13 +16,5 @@ y_val = df_validation.loc[:, 0]
 clf = LogisticRegression(random_state=2, max_iter=1000)
 clf.fit(X_train, y_train)
 
-# Accuracy
-acc = clf.score(X_val, y_val)
-print(acc)
-with open("metrics.txt", 'w') as outfile:
-        outfile.write("Accuracy: " + str(acc) + "\n")
-
-
-# Plot it
-disp = plot_confusion_matrix(clf, X_val, y_val, normalize='true',cmap=plt.cm.Blues)
-plt.savefig('confusion_matrix.png')
+# Save down trained model
+dump(clf, 'data/trained_model.joblib')

@@ -63,7 +63,7 @@ jobs:
 
           # Push trained model to remote storage
           # dvc add data/trained_model.joblib
-          dvc commit data.dvc
-          # git commit data/trained_model.joblib.dvc -m "Model updates"
+          dvc commit
+          # git commit data.dvc -m "Model updates"
           dvc push
 

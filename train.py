@@ -17,4 +17,4 @@ clf = LogisticRegression(random_state=2, max_iter=1000)
 clf.fit(X_train, y_train)
 
 # Save down trained model
-dump(clf, 'data/trained_model.joblib')
+dump(clf, 'trained_model.joblib')

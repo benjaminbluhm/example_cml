@@ -1,0 +1,14 @@
+train:
+  cmd: python train.py
+  deps:
+  - path: data/
+    md5: 069bb71df5ba1ace789f37d807da0de8.dir
+    size: 17601
+    nfiles: 2
+  - path: train.py
+    md5: 8b142d208ba7f4eb56346887fb90dbc0
+    size: 559
+  outs:
+  - path: trained_model.joblib
+    md5: 4d66bc91e87649fe3dfb2241ee7d6d91
+    size: 976

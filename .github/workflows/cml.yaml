@@ -56,14 +56,12 @@ jobs:
           pip install -r requirements.txt
 
           # Pull data & run-cache from S3
-          dvc pull
+          dvc pull --run-cache
 
-          # Execute training script
-          python train.py
+          # run the pipeline
+          dvc repro
 
-          # Push trained model to remote storage
-          # dvc add data/trained_model.joblib
-          dvc commit -f -v
-          # git commit data.dvc -m "Model updates"
-          dvc push
+          # push everything to remote
+          dvc push --run-cache
+
 

@@ -1,0 +1,5 @@
+project: turing-citizen-299412
+zone: europe-west3-a
+instance_type: n1-standard-1
+min_instances: 1
+max_instances: 1

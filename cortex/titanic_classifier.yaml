@@ -1,0 +1,10 @@
+- name: titanic-classifier
+  kind: RealtimeAPI
+  predictor:
+    type: python
+    path: predictor.py
+    config:
+      dvc_repo: "https://github.com/benjaminbluhm/example_cml"
+      model_path: "trained_model.pkl"
+  compute:
+    cpu: 1

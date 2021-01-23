@@ -6,9 +6,9 @@ train:
     size: 17601
     nfiles: 2
   - path: train.py
-    md5: 8b142d208ba7f4eb56346887fb90dbc0
-    size: 559
+    md5: 147ccb7c2ce7137bae9d8ac867c54a99
+    size: 560
   outs:
   - path: trained_model.joblib
-    md5: 4d66bc91e87649fe3dfb2241ee7d6d91
+    md5: 8e99ac68cc20184f7cceb30e09babfb1
     size: 976

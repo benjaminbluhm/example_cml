@@ -5,4 +5,4 @@ stages:
     - data/
     - train.py
     outs:
-    - trained_model.joblib
+    - trained_model.pkl

@@ -6,8 +6,8 @@ train:
     size: 17601
     nfiles: 2
   - path: train.py
-    md5: a6405a1fb6a79d71b6eed5b73082734c
-    size: 573
+    md5: ca527ab4478039fde2b03308cb23c240
+    size: 436
   outs:
   - path: trained_model.pkl
     md5: bb3b400b83e08d69275b8e2075f86a8f

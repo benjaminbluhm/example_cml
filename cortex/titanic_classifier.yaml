@@ -8,3 +8,4 @@
       model_path: "trained_model.pkl"
   compute:
     cpu: 1
+

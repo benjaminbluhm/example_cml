@@ -3,3 +3,5 @@ instance_type: m4.large
 min_instances: 1
 max_instances: 1
 spot: true
+
+
